@@ -341,16 +341,21 @@ CURLcode Curl_convert_form(struct SessionHandle *data, struct FormData *form)
 #endif /* CURL_DOES_CONVERSIONS */
 
 #ifdef USE_LIBIDN
-/* utf8len: Count the number of UTF-8 characters.
+/* utf8_strict_codepoint_count:
+Count the number of Unicode codepoints encoded in a UTF-8 string.
 
 This function also tests for valid UTF-8 in accordance with the Unicode
 Standard, Section Conformance 3.9, Table 3-7, Well-Formed UTF-8 Byte Sequences.
 http://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G7404
 
-Success: Returns the number of unicode codepoints encoded in a UTF-8 string.
+We are using this function to test the UTF-8 strings before we pass to libidn,
+so the conformance must remain strict. If we encounter any byte sequence that
+is not well-formed then we error.
+
+Success: Returns the number of Unicode codepoints encoded in a UTF-8 string.
 Failure: Returns -1 if 'str' is NULL or points to invalid UTF-8.
 */
-curl_off_t utf8len(const char *str)
+curl_off_t utf8_strict_codepoint_count(const char *str)
 {
   const unsigned char *ch = (const unsigned char*)str;
   const curl_off_t error = -1;

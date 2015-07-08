@@ -41,36 +41,45 @@ static void unit_stop(void)
 UNITTEST_START
 
 #ifdef USE_LIBIDN
-  fail_unless( utf8len(NULL) == -1, "null string should be an error" );
+  fail_unless( utf8_strict_codepoint_count(NULL) == -1,
+      "null string should be an error" );
 
-  fail_unless( utf8len("") == 0, "empty string should get utf8len == 0" );
+  fail_unless( utf8_strict_codepoint_count("") == 0,
+      "empty string should get utf8_strict_codepoint_count == 0" );
 
-  fail_unless( utf8len("\r\n") == 2, "ordinary ascii should get utf8len =="
+  fail_unless( utf8_strict_codepoint_count("\r\n") == 2,
+      "ordinary ascii should get utf8_strict_codepoint_count =="
       " strlen, even if it contains control chars");
 
   /* Mixture of normal and double-byte sequences as used in latin langs. */
-  fail_unless( utf8len("\xC2\xA9 2001, Chang\xC3\xA9 Corp.") == 20,
-      "utf8len should handle valid latin 1");
+  fail_unless( utf8_strict_codepoint_count(
+            "\xC2\xA9 2001, Chang\xC3\xA9 Corp.") == 20,
+      "utf8_strict_codepoint_count should handle valid latin 1");
 
   /* Japanese, Russian, Greek 2- and 3-byte sequences -- with a little ASCII */
-  fail_unless( utf8len("\xE5\xA4\x89\xE3\x82\x8F\xD1\x81\xD0\xB2 ascii "
-      "\xD1\x8F\xD0\xB7\xCF\x8E\xCF\x81\xCE\xB1") == 16,
-      "utf8len should support a mix of several interesting languages");
+  fail_unless( utf8_strict_codepoint_count(
+            "\xE5\xA4\x89\xE3\x82\x8F\xD1\x81\xD0\xB2 ascii "
+            "\xD1\x8F\xD0\xB7\xCF\x8E\xCF\x81\xCE\xB1") == 16,
+      "utf8_strict_codepoint_count should support a mix of several interesting"
+      " languages");
 
   /* overlong encoding of the Euro sign */
-  fail_unless( utf8len("\xF0\x82\x82\xAC") == -1,
-      "utf8len should reject overlong encodings");
+  fail_unless( utf8_strict_codepoint_count(
+            "\xF0\x82\x82\xAC") == -1,
+      "utf8_strict_codepoint_count should reject overlong encodings");
 
   /* overlong encoding of embedded null */
-  fail_unless( utf8len("with embedded null \xC0\x80 <<there") == -1,
-      "utf8len must disallow embedded null with overlong encoding, which is"
-      " known as 'modified utf8' in some circles but which is dangerous when"
-      " passed to libidn");
+  fail_unless( utf8_strict_codepoint_count(
+            "with embedded null \xC0\x80 <<there") == -1,
+      "utf8_strict_codepoint_count must disallow embedded null with overlong"
+      " encoding, which is known as 'modified utf8' in some circles but which"
+      " is dangerous when passed to libidn");
 
   /* surrogate pair */
-  fail_unless(utf8len("\xED\xA0\x81\xED\xB0\x80") == -1,
-      "utf8len must disallow CESU-8-style surrogate pairs (see"
-      " http://j.mp/1HzJPBY)");
+  fail_unless(utf8_strict_codepoint_count(
+            "\xED\xA0\x81\xED\xB0\x80") == -1,
+      "utf8_strict_codepoint_count must disallow CESU-8-style surrogate pairs"
+      " (see http://j.mp/1HzJPBY)");
 
   /* invalid trail bytes, per table 3.7 in the Unicode Standard v7, Section
      Conformance 3.9, Table 3-7, Well-Formed UTF-8 Byte Sequences.
@@ -82,10 +91,17 @@ UNITTEST_START
      seems prudent to prove that the table and our algorithm and our named
      scenarios all have the same scope...
   */
-  fail_unless(utf8len("\xE0\x9F\xB1") == -1, "bad 2nd byte");
-  fail_unless(utf8len("\xED\xA0\xB1") == -1, "bad 2nd byte");
-  fail_unless(utf8len("\xF0\x85\xB1\xB1") == -1, "bad 2nd byte");
-  fail_unless(utf8len("\xF4\x90\xB1\xB1") == -1, "bad 2nd byte");
+  fail_unless(utf8_strict_codepoint_count("\xE0\x9F\xB1") == -1,
+      "bad 2nd byte");
+
+  fail_unless(utf8_strict_codepoint_count("\xED\xA0\xB1") == -1,
+      "bad 2nd byte");
+
+  fail_unless(utf8_strict_codepoint_count("\xF0\x85\xB1\xB1") == -1,
+      "bad 2nd byte");
+
+  fail_unless(utf8_strict_codepoint_count("\xF4\x90\xB1\xB1") == -1,
+      "bad 2nd byte");
 
   /* Up to this point, we've just proved that our validation logic is
    * accurate. Now we need to prove that it actually gets invoked when we

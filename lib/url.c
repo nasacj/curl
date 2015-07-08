@@ -3712,7 +3712,7 @@ static void fix_hostname(struct SessionHandle *data,
      * are also disallowed. This is a security measure; unsanitized UTF-8
      * could be used to encode embedded null bytes and other undesirable stuff.
      */
-    if(utf8len(utf8) < 0) {
+    if(utf8_strict_codepoint_count(utf8) < 0) {
       infof(data, "Hostname contains invalid UTF-8 sequence\n");
       rc = IDNA_STRINGPREP_ERROR;
     }

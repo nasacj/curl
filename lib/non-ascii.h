@@ -61,7 +61,13 @@ CURLcode Curl_convert_form(struct SessionHandle *data, struct FormData *form);
 #endif
 
 #ifdef USE_LIBIDN
-curl_off_t utf8len(const char *str);
+/*
+ * utf8_strict_codepoint_count returns the Unicode codepoint count from a UTF-8
+ * string or -1 if invalid UTF-8 is encountered. Note that a UTF-8 BOM is a
+ * codepoint and is counted as such.
+ * Refer to comment block above this function's definition for more detail.
+ */
+curl_off_t utf8_strict_codepoint_count(const char *str);
 #endif
 
 #endif /* HEADER_CURL_NON_ASCII_H */
