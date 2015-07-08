@@ -347,7 +347,7 @@ This function also tests for valid UTF-8 in accordance with the Unicode
 Standard, Section Conformance 3.9, Table 3-7, Well-Formed UTF-8 Byte Sequences.
 http://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G7404
 
-Success: Returns the number of UTF-8 characters.
+Success: Returns the number of unicode codepoints encoded in a UTF-8 string.
 Failure: Returns -1 if 'str' is NULL or points to invalid UTF-8.
 */
 curl_off_t utf8len(const char *str)

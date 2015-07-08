@@ -3671,7 +3671,7 @@ static bool tld_check_name(struct SessionHandle *data,
 
   return TRUE;
 }
-#endif
+#endif /* USE_LIBIDN */
 
 /*
  * Perform any necessary IDN conversion of hostname
@@ -3705,8 +3705,13 @@ static void fix_hostname(struct SessionHandle *data,
   if(stringprep_check_version(LIBIDN_REQUIRED_VERSION)) {
     char *ace_hostname = NULL;
     int rc;
-    /* Don't pass UTF-8 hostname to libidn unless it's valid UTF-8 */
     char *utf8 = stringprep_locale_to_utf8(host->name);
+    /* Don't pass UTF-8 hostname to libidn unless it's valid UTF-8. This check
+     * is quite picky; in addition to 5- and 6-byte sequences and invalid lead
+     * and continuation bytes, CESU-8 and so-called 'Modified UTF-8' sequences
+     * are also disallowed. This is a security measure; unsanitized UTF-8
+     * could be used to encode embedded null bytes and other undesirable stuff.
+     */
     if(utf8len(utf8) < 0) {
       infof(data, "Hostname contains invalid UTF-8 sequence\n");
       rc = IDNA_STRINGPREP_ERROR;
