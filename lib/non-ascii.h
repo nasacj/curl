@@ -60,4 +60,8 @@ CURLcode Curl_convert_form(struct SessionHandle *data, struct FormData *form);
 #define Curl_convert_form(a,b) CURLE_OK
 #endif
 
+#ifdef USE_LIBIDN
+curl_off_t utf8len(const char *str);
+#endif
+
 #endif /* HEADER_CURL_NON_ASCII_H */

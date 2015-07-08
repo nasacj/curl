@@ -22,18 +22,21 @@
 
 #include "curl_setup.h"
 
-#ifdef CURL_DOES_CONVERSIONS
-
 #include <curl/curl.h>
 
 #include "non-ascii.h"
+
+#ifdef CURL_DOES_CONVERSIONS
 #include "formdata.h"
 #include "sendf.h"
 #include "urldata.h"
+#endif /* CURL_DOES_CONVERSIONS */
 
 #include "curl_memory.h"
 /* The last #include file should be: */
 #include "memdebug.h"
+
+#ifdef CURL_DOES_CONVERSIONS
 
 #ifdef HAVE_ICONV
 #include <iconv.h>
@@ -336,3 +339,48 @@ CURLcode Curl_convert_form(struct SessionHandle *data, struct FormData *form)
 }
 
 #endif /* CURL_DOES_CONVERSIONS */
+
+#ifdef USE_LIBIDN
+/* utf8len: Count the number of UTF-8 characters.
+
+This function also tests for valid UTF-8 in accordance with the Unicode
+Standard, Section Conformance 3.9, Table 3-7, Well-Formed UTF-8 Byte Sequences.
+http://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G7404
+
+Success: Returns the number of UTF-8 characters.
+Failure: Returns -1 if 'str' is NULL or points to invalid UTF-8.
+*/
+curl_off_t utf8len(const char *str)
+{
+  const unsigned char *ch = (const unsigned char*)str;
+  const curl_off_t error = -1;
+  curl_off_t count = 0;
+
+  if(!ch)
+    return error;
+
+  for(; *ch; ++ch, ++count) {
+    unsigned char first = *ch; /* first byte */
+    if(*ch <= 0x7F)
+      continue;
+    if(*ch < 0xC2 || *ch > 0xF4)
+      return error;
+    ++ch; /* second byte */
+    if(*ch < (first == 0xE0 ? 0xA0 : (first == 0xF0 ? 0x90 : 0x80)) ||
+       *ch > (first == 0xED ? 0x9F : (first == 0xF4 ? 0x8F : 0xBF)))
+      return error;
+    if(first <= 0xDF)
+      continue;
+    ++ch; /* third byte */
+    if(*ch < 0x80 || *ch > 0xBF)
+      return error;
+    if(first <= 0xEF)
+      continue;
+    ++ch; /* fourth byte */
+    if(*ch < 0x80 || *ch > 0xBF)
+      return error;
+  }
+
+  return count;
+}
+#endif /* USE_LIBIDN */
